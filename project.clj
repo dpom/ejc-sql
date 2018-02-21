@@ -8,5 +8,10 @@
                  [org.clojure/java.jdbc "0.5.8"]
                  [org.apache.openjpa/openjpa-all "2.2.2"]
                  [org.hibernate/hibernate-core "5.2.3.Final"]
-                 [com.cemerick/pomegranate "0.3.0"]
-                 [org.apache.commons/commons-lang3 "3.2.1"]])
+                 [com.cemerick/pomegranate "0.3.0" :exclusions [org.codehaus.plexus/plexus-utils]]
+                 [org.apache.commons/commons-lang3 "3.2.1"]
+                 [mysql/mysql-connector-java "8.0.9-rc"]
+                 [org.postgresql/postgresql "42.2.1.jre7"]]
+  :pedantic? :warning
+  :plugins [[lein-ancient "0.6.15" :exclusions [org.clojure/clojure]]]
+)
