@@ -1,6 +1,6 @@
 ;;; ejc-sql.el --- Emacs SQL client uses Clojure JDBC. -*- lexical-binding: t -*-
 
-;;; Copyright © 2012-2017 - Kostafey <kostafey@gmail.com>
+;;; Copyright © 2012-2018 - Kostafey <kostafey@gmail.com>
 
 ;; Author: Kostafey <kostafey@gmail.com>
 ;; URL: https://github.com/kostafey/ejc-sql
@@ -345,18 +345,38 @@ any SQL buffer to connect to exact database, as always. "
                                             :owner owner
                                             :table table)))
         (if (ejc-not-nil-str sql)
-            (ejc-eval-sql-and-log ejc-db sql)
+            (let ((constraints (ejc-eval-sql-and-log ejc-db sql)))
+              (if (and constraints
+                       (not (equal (string-trim constraints) "nil")))
+                  (concat
+                   "Constraints:\n"
+                   "------------\n"
+                   constraints)
+                  ""))
           ""))))))
 
 (defun ejc-describe-entity (entity-name)
-  "Describe SQL entity ENTITY-NAME - function, procedure or type
+  "Describe SQL entity ENTITY-NAME - function, procedure, type or view
    (default entity name - word around the point)."
   (interactive (ejc-get-prompt-symbol-under-point "Describe entity"))
   (ejc-check-connection)
   (ejc-show-last-result
-   (ejc-eval-sql-and-log ejc-db
-                         (ejc-select-db-meta-script ejc-db :entity
-                                                    :entity-name entity-name))))
+   (let ((entity-result
+          ;; Try to get entity source code.
+          (ejc-eval-sql-and-log
+           ejc-db
+           (ejc-select-db-meta-script ejc-db :entity
+                                      :entity-name entity-name))))
+     (if (not (equal entity-result "nil"))
+         ;; Show entity text.
+         ;; Assume there is no entity and view with the same names.
+         entity-result
+       ;; No entity with such name.
+       ;; Try to get view source code.
+       (ejc-eval-sql-and-log
+        ejc-db
+        (ejc-select-db-meta-script ejc-db :view
+                                   :entity-name entity-name))))))
 
 (cl-defun ejc-eval-user-sql (sql &key sync rows-limit)
   "Evaluate SQL by user: reload and show query results buffer, update log."
